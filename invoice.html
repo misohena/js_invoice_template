@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" moznomarginboxes mozdisallowselectionprint>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="default.css" />
+    <title>請求書</title>
+    <script>
+      var bill = {
+        date: "2015年3月31日",
+        client:"株式会社○○ 御中", //様
+        subject: "○○プロジェクト費用",
+        items: [
+          {desc:"システム開発費用", unit:123456, quantity:1},
+          {desc:"サーバメンテナンス1年分", unit:20000, quantity:12}
+        ],
+        payment:"○○銀行 ××支店 普通 9999999\nスズキ　タロウ",
+        biller:"鈴木 太郎\n"+
+               "〒999-9999\n"+
+               "東京都○○市9-99-99\n"+
+               "999-9999-9999"
+      };
+      var MIN_ITEM_LINES = 10;
+    </script>
+    <script>
+      //<![CDATA[
+      function formatMoney(m){
+        return m.toLocaleString();
+      }
+      function insertMultilineText(elem, text){
+        if(typeof(text) == "string"){
+          var lines = text.split("\n");
+          for(var i = 0; i < lines.length; ++i){
+            if(i > 0){
+              elem.appendChild(document.createElement("br"));
+            }
+            elem.appendChild(document.createTextNode(lines[i]));
+          }
+        }
+      }
+      function writeText(text){
+        insertMultilineText(document.currentScript.parentNode, text);
+      }
+      function setElementVisible(id, visible){
+        var elem = document.getElementById(id);
+        if(elem && !visible){
+          elem.style.display = "none";
+        }
+      }
+
+      function outputItems(parent){
+        function tr(){
+          var tr = document.createElement("tr");
+          parent.appendChild(tr);
+          return {td:function(text){
+            var td = document.createElement("td");
+            if(text){td.appendChild(document.createTextNode(text));}
+            tr.appendChild(td);
+            return this;
+            }};
+        }
+        bill.items.forEach(function(item){
+          tr().
+            td(item.desc).
+            td(formatMoney(item.unit)).
+            td(item.quantity).
+            td(formatMoney(item.unit*item.quantity));
+        });
+        for(var i = bill.items.length; i < MIN_ITEM_LINES; ++i){
+          tr().td().td().td().td();
+        }
+      }
+      function getTotalAmount(){
+        return bill.items.map(function(item){return item.unit * item.quantity;}).reduce(function(a, b){return a+b;});
+      }
+      //]]>
+    </script>
+    <style>
+      h1 { font-size:180%; margin: 0 0 1em 0; text-align: center;}
+      h2 { font-size:100%; margin: 1em 0 0.25em 0;}
+      .section_body {
+        width: fit-content;
+        width: -moz-fit-content;
+        width: -webkit-fit-content;
+      }
+
+      #date { text-align: right;}
+      #client {
+      font-size: 120%;
+      font-weight: bold;
+      }
+      #biller {
+        margin-bottom: 1em;
+        float:right;
+      }
+      #body {
+        clear:both;
+      }
+      #subject>.section_body {
+        border-bottom: 1px solid black;
+        padding: 0 1em;
+      }
+      #total { margin-bottom: 1em;}
+      #total>.section_body {
+        border-bottom: 2px solid black;
+        font-size: 140%;
+        padding: 0 1em;
+      }
+
+      /* items */
+      table {
+        border-collapse: collapse;
+        border:3px solid black;
+      }
+      th { color:white; background:black;}
+      th,td { border-right:1px solid #888; padding:0.5em 0.5em;}
+      #items>tbody>tr:nth-child(even){
+        background: #ddd;
+      }
+      #items { width: 100%;}
+      #items tr {height: 2em;}
+      #items>tbody>tr>td:nth-child(2) {text-align:right;}
+      #items>tbody>tr>td:nth-child(3) {text-align:right;}
+      #items>tbody>tr>td:nth-child(4) {text-align:right;}
+      .items_description {}
+      .items_unitprice { width: 6em;}
+      .items_quantity { width: 4em;}
+      .items_amount { width: 6em;}
+      #items_total { border-top: 0; float:right;}
+      #items_total>tbody>tr>td:nth-child(1) {text-align:center;}
+      #items_total>tbody>tr>td:nth-child(2) {text-align:right;}
+
+      /* payment details */
+      #payment {
+        clear:both;
+      }
+      #payment>.section_body{
+        border: 2px solid black;
+        padding: 0.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="date">
+      <script>writeText(bill.date);</script>
+    </div>
+
+    <h1>請求書</h1>
+
+    <section id="client">
+      <script>writeText(bill.client);</script>
+    </section>
+
+    <section id="biller">
+      <script>writeText(bill.biller);</script>
+    </section>
+
+    <section id="body">
+      平素は格別のお引き立てを賜り厚く御礼申し上げます。下記の通りご請求申し上げます。
+    </section>
+
+    <section id="subject">
+      <h2>ご請求件名</h2>
+      <div class="section_body">
+        <script>writeText(bill.subject); setElementVisible("subject", bill.subject);</script>
+      </div>
+    </section>
+
+    <section id="total">
+      <h2>ご請求金額(税込)</h2>
+      <div class="section_body">
+        ￥<script>writeText(formatMoney(getTotalAmount()));</script>-
+      </div>
+    </section>
+
+    <section>
+      <table id="items">
+        <colgroup>
+          <col class="items_description" />
+          <col class="items_unitprice" />
+          <col class="items_quantity" />
+          <col class="items_amount" />
+        </colgroup>
+        <thead>
+          <tr><th>品名</th><th>単価</th><th>数量</th><th>金額</th></tr>
+        </thead>
+        <tbody id="items_body">
+          <script>outputItems(document.currentScript.parentNode);</script>
+        </tbody>
+      </table>
+      <table id="items_total">
+        <colgroup>
+          <col class="items_unitprice" />
+          <col class="items_quantity" />
+          <col class="items_amount" />
+        </colgroup>
+        <tr><td colspan="2">合計(税込)</td><td><script>writeText(formatMoney(getTotalAmount()));</script></td></tr>
+      </table>
+    </section>
+
+    <section id="payment">
+      <h2>お振込先</h2>
+      <div class="section_body">
+        <script>writeText(bill.payment);</script>
+      </div>
+    </section>
+
+  </body>
+</html>
